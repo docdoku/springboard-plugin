@@ -8,6 +8,7 @@ var rev = require('gulp-rev');
 var revReplace = require('gulp-rev-replace');
 
 var themeConf = require('./theme-conf').conf;
+var scssVarBuilder = require('./scss-var-builder');
 
 var sourceDependency = [];
 
@@ -44,14 +45,22 @@ gulp.task('bower', ['clean'], () => {
 gulp.task('update', ['bower'], function () {
     var themes = gulp.src(themesSources(), { base: './bower_components' })
         .pipe(gulp.dest('./assets/themes'));
-    
+
     var widgets = gulp.src(widgetsSources(), { base: './bower_components' })
         .pipe(gulp.dest('./assets/widgets'));
 
     return merge([themes, widgets]);
 });
 
-gulp.task('fill-theme', sourceDependency, function () {
+gulp.task('build-vars', sourceDependency, function(){
+
+    return gulp.src('./assets/themes/entcore-css-lib/buildable-vars/_buildable-vars.scss')
+        .pipe(scssVarBuilder())
+        .pipe(gulp.dest('./assets/themes/entcore-css-lib/buildable-vars'))
+
+})
+
+gulp.task('fill-theme', ['build-vars'], function () {
     var streams = [];
     themeConf.overriding.forEach((theme) => {
         streams.push(
@@ -86,7 +95,7 @@ gulp.task('copy-local', function () {
                 .pipe(gulp.dest('./assets/widgets'))
         )
     }
-    
+
     return merge(streams);
 });
 
@@ -101,7 +110,7 @@ gulp.task('override-theme', ['version-fonts'], function () {
             );
         });
     })
-    
+
     return merge(streams);
 });
 
